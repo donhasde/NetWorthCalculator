@@ -1,4 +1,4 @@
-package com.intuit.craftdemo.NetWorthCalculatorService.controllers;
+package com.intuit.craftdemo.NetWorthCalculatorService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
