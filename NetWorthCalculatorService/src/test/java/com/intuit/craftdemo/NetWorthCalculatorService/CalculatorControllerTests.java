@@ -9,12 +9,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.intuit.craftdemo.NetWorthCalculatorService.CalculatorController;
-import com.intuit.craftdemo.NetWorthCalculatorService.NetWorthCalculatorService;
-import com.intuit.craftdemo.NetWorthCalculatorService.UserData;
-
 @SpringBootTest
-public class CalculatorControllerTests {
+public class CalculatorControllerTests extends UnitTestBase {
 
 	@Mock
 	private NetWorthCalculatorService mockService;

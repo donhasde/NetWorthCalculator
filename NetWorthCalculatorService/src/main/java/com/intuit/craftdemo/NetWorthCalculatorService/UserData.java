@@ -21,11 +21,11 @@ public class UserData {
 	@JsonProperty("totalLiabilities")
 	private float totalLiabilities;
 
-	public String getBaseCurrency() {
+	public String getBaseCurrencyCode() {
 		return baseCurrencyCode;
 	}
 
-	public void setBaseCurrency(String currency) {
+	public void setBaseCurrencyCode(String currency) {
 		baseCurrencyCode = currency;
 	}
 
