@@ -28,10 +28,15 @@ tr.break td {
   height: 20px;
 }
 
-.table {
+table {
   width: 100%;
-  border-collapse: separate;
+  border-collapse: collapse;
   text-align: left;
+}
+
+.right {
+  width: 30%;
+  align-items: right;
 }
 
 input::-webkit-inner-spin-button {

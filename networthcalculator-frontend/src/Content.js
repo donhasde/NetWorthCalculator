@@ -1,7 +1,9 @@
 import TableGroup from './TableGroup'
+import { useState, useEffect } from 'react'
 
 const Content = () => {
     const currencySymbol = '$';
+    const [netWorth, setNetWorth] = useState(0.00);
 
     const assetList = [
         {label: 'Chequing', id: 'chequing'},
@@ -30,12 +32,9 @@ const Content = () => {
         console.log("handleChange detected");
 
         const baseCurrencyCode = document.getElementById("currency").value;
-        const targetCurrencyCode = baseCurrencyCode;
-
         const assetMap = new Map();
         assetList.map((element) => (assetMap.set(element.id, document.getElementById(element.id).value)));
         const assets = Object.fromEntries(assetMap);
-
         const liabilitiesMap = new Map();
         liabilitiesList.map((element) => (liabilitiesMap.set(element.id, document.getElementById(element.id).value)));
         const liabilities = Object.fromEntries(liabilitiesMap);
@@ -45,7 +44,6 @@ const Content = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 baseCurrencyCode,
-                targetCurrencyCode,
                 assets,
                 liabilities
             })
@@ -54,8 +52,17 @@ const Content = () => {
 
         fetch('http://localhost:8080/api/v1/calculateNetWorth', requestOptions)
             .then(response => response.json())
-            .then(data => console.log(data))
-            .catch(console.log);
+            .then(data => {
+                console.log(data);
+                Object.entries(data.assets)
+                    .map(([key, value]) => (document.getElementById(key).value = value));
+                Object.entries(data.liabilities)
+                    .map(([key, value]) => (document.getElementById(key).value = value));
+                document.getElementById("totalAssets").value = data.totalAssets;
+                document.getElementById("totalLiabilities").value = data.totalLiabilities;
+                setNetWorth(data.totalNetWorth);
+            })
+        .catch(console.log);
     }
 
     return (
@@ -73,11 +80,11 @@ const Content = () => {
                 <option value="USD">NZD</option>
                 <option value="USD">USD</option>
             </select><br/>
-            <p>Net Worth: </p>
+            <p>Net Worth: {netWorth}</p>
             <hr className="solidLine"></hr>
-            <h4>Assets</h4>
 
             <table onChange={handleChange}>
+                <tbody><tr><th scope="row">Assets</th></tr></tbody>
                 <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" symbol={currencySymbol}/>
                 <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" symbol={currencySymbol}/>
                 <tbody>
@@ -87,6 +94,8 @@ const Content = () => {
                     </tr>
                     <tr className="break"><td/></tr>
                 </tbody>
+
+                <tbody><tr><th scope="row">Liabilities</th></tr></tbody>
                 <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" symbol={currencySymbol}/>
                 <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" symbol={currencySymbol}/>
                 <tbody>
