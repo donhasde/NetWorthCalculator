@@ -2,7 +2,8 @@ import TableGroup from './TableGroup'
 import { useState, useEffect } from 'react'
 
 const Content = () => {
-    const currencySymbol = '$';
+    const [baseCurrency, setBaseCurrency] = useState("AUD");
+    const [currencySymbol, setCurrencySymbol] = useState('$');
     const [netWorth, setNetWorth] = useState(0.00);
 
     const assetList = [
@@ -28,10 +29,19 @@ const Content = () => {
         {label: 'Investment Loan', id: 'investmentLoan'},
     ];
 
-    const handleChange = () => {
-        console.log("handleChange detected");
+    const handleCurrencyChange = (event) => {
+        console.log("handleCurrencyChange detected");
+        console.log(event.target.value);
+        console.log(event.target.symbol);
+        setCurrencySymbol(event.target.selectedOptions[0].getAttribute('symbol'));
+        callService(baseCurrency, event.target.value);
+    }
 
-        const baseCurrencyCode = document.getElementById("currency").value;
+    const handleChange = () => {
+        callService(baseCurrency, null);
+    }
+
+    const callService = (baseCurrencyCode, targetCurrencyCode) => {
         const assetMap = new Map();
         assetList.map((element) => (assetMap.set(element.id, document.getElementById(element.id).value)));
         const assets = Object.fromEntries(assetMap);
@@ -44,6 +54,7 @@ const Content = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 baseCurrencyCode,
+                targetCurrencyCode,
                 assets,
                 liabilities
             })
@@ -60,6 +71,7 @@ const Content = () => {
                     .map(([key, value]) => (document.getElementById(key).value = value));
                 document.getElementById("totalAssets").value = data.totalAssets;
                 document.getElementById("totalLiabilities").value = data.totalLiabilities;
+                setBaseCurrency(data.baseCurrencyCode);
                 setNetWorth(data.totalNetWorth);
             })
         .catch(console.log);
@@ -68,19 +80,19 @@ const Content = () => {
     return (
         <div className="Content">
             <label htmlFor="currency">Select Currency: </label>
-            <select name="currency" id="currency">
-                <option value="AUD">AUD</option>
-                <option value="CAD">CAD</option>
-                <option value="CHF">CHF</option>
-                <option value="CNH">CNH</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="HKD">HKD</option>
-                <option value="JPY">JPY</option>
-                <option value="USD">NZD</option>
-                <option value="USD">USD</option>
+            <select name="currency" id="currency" onChange={handleCurrencyChange}>
+                <option value="AUD" symbol="$">AUD</option>
+                <option value="CAD" symbol="$">CAD</option>
+                <option value="CHF" symbol="₣">CHF</option>
+                <option value="CNH" symbol="¥">CNH</option>
+                <option value="EUR" symbol="€">EUR</option>
+                <option value="GBP" symbol="£">GBP</option>
+                <option value="HKD" symbol="$">HKD</option>
+                <option value="JPY" symbol="¥">JPY</option>
+                <option value="NZD" symbol="$">NZD</option>
+                <option value="USD" symbol="$">USD</option>
             </select><br/>
-            <p>Net Worth: {netWorth}</p>
+            <p>Net Worth: {currencySymbol} {netWorth}</p>
             <hr className="solidLine"></hr>
 
             <table onChange={handleChange}>
