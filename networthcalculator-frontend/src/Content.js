@@ -3,7 +3,7 @@ import TableGroup from './TableGroup'
 const Content = () => {
     const currencySymbol = '$';
 
-    const assets = [
+    const assetList = [
         {label: 'Chequing', id: 'chequing'},
         {label: 'Savings for Taxes', id: 'taxSavings'},
         {label: 'Rainy Day Fund', id: 'emergencySavings'},
@@ -17,7 +17,7 @@ const Content = () => {
         {label: 'Second Home', id: 'secondHome'},
         {label: 'Other', id: 'other'}
     ];
-    const liabilities = [
+    const liabilitiesList = [
         {label: 'Credit Card 1', id: 'creditCard1'},
         {label: 'Credit Card 2', id: 'creditCard2'},
         {label: 'Mortgage 1', id: 'mortgage1'},
@@ -26,6 +26,37 @@ const Content = () => {
         {label: 'Investment Loan', id: 'investmentLoan'},
     ];
 
+    const handleChange = () => {
+        console.log("handleChange detected");
+
+        const baseCurrencyCode = document.getElementById("currency").value;
+        const targetCurrencyCode = baseCurrencyCode;
+
+        const assetMap = new Map();
+        assetList.map((element) => (assetMap.set(element.id, document.getElementById(element.id).value)));
+        const assets = Object.fromEntries(assetMap);
+
+        const liabilitiesMap = new Map();
+        liabilitiesList.map((element) => (liabilitiesMap.set(element.id, document.getElementById(element.id).value)));
+        const liabilities = Object.fromEntries(liabilitiesMap);
+
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                baseCurrencyCode,
+                targetCurrencyCode,
+                assets,
+                liabilities
+            })
+        };
+        console.log(requestOptions.body);
+
+        fetch('http://localhost:8080/api/v1/calculateNetWorth', requestOptions)
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(console.log);
+    }
 
     return (
         <div className="Content">
@@ -46,9 +77,9 @@ const Content = () => {
             <hr className="solidLine"></hr>
             <h4>Assets</h4>
 
-            <table className="table">
-                <TableGroup data={assets.slice(0, 9)} label="Cash and Investments" symbol={currencySymbol}/>
-                <TableGroup data={assets.slice(9, assets.length)} label="Long Term Assets" symbol={currencySymbol}/>
+            <table onChange={handleChange}>
+                <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" symbol={currencySymbol}/>
+                <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" symbol={currencySymbol}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Assets</th>
@@ -56,8 +87,8 @@ const Content = () => {
                     </tr>
                     <tr className="break"><td/></tr>
                 </tbody>
-                <TableGroup data={liabilities.slice(0,2)} label="Short Term Liabilities" symbol={currencySymbol}/>
-                <TableGroup data={liabilities.slice(2,assets.length)} label="Long Term Debt" symbol={currencySymbol}/>
+                <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" symbol={currencySymbol}/>
+                <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" symbol={currencySymbol}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Liabilities</th>
