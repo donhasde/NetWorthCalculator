@@ -84,7 +84,7 @@ const Content = () => {
                 <option value="AUD" symbol="$">AUD</option>
                 <option value="CAD" symbol="$">CAD</option>
                 <option value="CHF" symbol="₣">CHF</option>
-                <option value="CNH" symbol="¥">CNH</option>
+                <option value="CNY" symbol="¥">CNY</option>
                 <option value="EUR" symbol="€">EUR</option>
                 <option value="GBP" symbol="£">GBP</option>
                 <option value="HKD" symbol="$">HKD</option>
