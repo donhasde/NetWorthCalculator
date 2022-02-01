@@ -5,6 +5,9 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserData {
+	@JsonProperty("userId")
+	private Long userId;
+
 	@JsonProperty("baseCurrencyCode")
 	private String baseCurrencyCode;
 	@JsonProperty("targetCurrencyCode")
@@ -20,6 +23,14 @@ public class UserData {
 	private float totalAssets;
 	@JsonProperty("totalLiabilities")
 	private float totalLiabilities;
+
+	public Long getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Long id) {
+		userId = id;
+	}
 
 	public String getBaseCurrencyCode() {
 		return baseCurrencyCode;

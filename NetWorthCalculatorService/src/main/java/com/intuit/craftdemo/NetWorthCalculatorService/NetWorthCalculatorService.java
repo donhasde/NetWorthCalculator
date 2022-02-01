@@ -2,6 +2,9 @@ package com.intuit.craftdemo.NetWorthCalculatorService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,8 @@ import org.springframework.stereotype.Service;
 public class NetWorthCalculatorService {
 	@Autowired
 	FreeCurrencyConverterClient forexClient;
+
+	private final ConcurrentMap<Long, UserData> database = new ConcurrentHashMap<>();
 
 	public UserData calculateNetWorth(UserData input) {
 		float exchangeRate = 1.0f;
@@ -46,6 +51,7 @@ public class NetWorthCalculatorService {
 
 		// Build the return output
 		UserData output = new UserData();
+		output.setUserId(input.getUserId());
 		output.setBaseCurrencyCode(finalCurrency);
 		output.setTargetCurrencyCode(null);
 		output.setAssets(assets);
@@ -53,6 +59,20 @@ public class NetWorthCalculatorService {
 		output.setTotalNetWorth(totalNetWorth);
 		output.setTotalAssets(totalAssets);
 		output.setTotalLiabilities(totalLiabilities);
+
+		database.put(input.getUserId(), output);
+
+		return output;
+	}
+
+	public UserData getOrCreateUser(Long userId) {
+		if (database.containsKey(userId))
+			return database.get(userId);
+
+		// Automatically create the user if they don't exist
+		UserData output = new UserData();
+		output.setUserId(userId);
+		database.put(userId, output);
 		return output;
 	}
 }
