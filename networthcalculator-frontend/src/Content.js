@@ -50,7 +50,7 @@ const Content = () => {
             [id]: value
         }
         setEquity(newEquity);
-        calculateEquity(newEquity);
+        calculateEquity(newEquity, baseCurrency);
     }
 
     const calculateEquity = (equity, baseCurrencyCode, targetCurrencyCode) => {
@@ -88,8 +88,7 @@ const Content = () => {
                     .map(([key, value]) => (equity[key] = value));
                 setTotalAssets(data.totalAssets);
                 setTotalLiabilities(data.totalLiabilities);
-                if (data.baseCurrencyCode !== null)
-                    setBaseCurrency(data.baseCurrencyCode);
+                setBaseCurrency(data.baseCurrencyCode);
                 setNetWorth(data.totalNetWorth);
             })
         .catch(console.log);
