@@ -15,7 +15,7 @@
   border-bottom: 1px solid #f2f2f2;
 }
 .navbar h1 {
-  color: #dc0f4c;
+  color: rgb(104, 206, 73);
 }
 
 .Content {
@@ -30,24 +30,20 @@ tr.break td {
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
   text-align: left;
 }
 
-.right {
-  width: 30%;
-  align-items: right;
+.mid {
+  width: 25%;
+  text-align: right;
 }
 
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.right {
+  float: right;
 }
-input[type=number] {
-  border: 0px;
+
+input{
   text-align: right;
-  -moz-appearance:textfield;
-}
-textarea:focus, input:focus{
-  outline: none;
+  border: 0px;
 }
