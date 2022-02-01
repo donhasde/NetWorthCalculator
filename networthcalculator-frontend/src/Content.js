@@ -35,9 +35,10 @@ const Content = () => {
     const onCurrencyChange = (event) => {
         console.log("handleCurrencyChange detected");
         const newCurrency = event.target.value;
+        const oldCurrency = baseCurrency;
         setCurrencySymbol(event.target.selectedOptions[0].getAttribute('symbol'));
         setBaseCurrency(newCurrency);
-        calculateEquity(equity, baseCurrency, newCurrency);
+        calculateEquity(equity, oldCurrency, newCurrency);
     }
 
     const onInputChange = (event) => {
@@ -87,7 +88,8 @@ const Content = () => {
                     .map(([key, value]) => (equity[key] = value));
                 setTotalAssets(data.totalAssets);
                 setTotalLiabilities(data.totalLiabilities);
-                setBaseCurrency(data.baseCurrencyCode);
+                if (data.baseCurrencyCode !== null)
+                    setBaseCurrency(data.baseCurrencyCode);
                 setNetWorth(data.totalNetWorth);
             })
         .catch(console.log);
