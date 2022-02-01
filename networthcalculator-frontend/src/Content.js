@@ -3,16 +3,25 @@ import NumberFormat from "react-number-format";
 import { useState, useEffect } from 'react'
 
 const Content = () => {
+    const [userId, setUserId] = useState(0);
     const [equity, setEquity] = useState({});
-    const [currencyFormat, setCurrencyFormat] = useState({
-        currency:"CAD",
-        thousand:',',
-        decimal:'.',
-        symbol:'$',
-    });
+    const [currency, setCurrency] = useState("CAD");
     const [totalAssets, setTotalAssets] = useState(0.00);
     const [totalLiabilities, setTotalLiabilities] = useState(0.00);
     const [netWorth, setNetWorth] = useState(0.00);
+
+    const currencyConfig = {
+        AUD:{symbol:"$", thousand:',', decimal:'.'},
+        CAD:{symbol:"$", thousand:',', decimal:'.'},
+        CHF:{symbol:"fr.", thousand:'.', decimal:','},
+        CNY:{symbol:"¥", thousand:',', decimal:'.'},
+        EUR:{symbol:"€", thousand:'.', decimal:','},
+        GBP:{symbol:"£", thousand:',', decimal:'.'},
+        HKD:{symbol:"HK$", thousand:',', decimal:'.'},
+        JPY:{symbol:"¥", thousand:',', decimal:'.'},
+        NZD:{symbol:"$", thousand:',', decimal:'.'},
+        USD:{symbol:"$", thousand:',', decimal:'.'}
+    }
 
     const assetList = [
         {label: 'Chequing', id: 'chequing'},
@@ -37,17 +46,47 @@ const Content = () => {
         {label: 'Investment Loan', id: 'investmentLoan'},
     ];
 
+    useEffect(() => {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        };
+        const endpoint = 'http://localhost:8080/api/v1/user/'+ JSON.stringify(userId);
+        fetch(endpoint, requestOptions)
+            .then(response => response.json())
+            .then(data => { updateData(data) })
+        .catch(console.log);
+    }, []);
+
+    const updateData = ((data) => {
+        console.log("Result: " + JSON.stringify(data));
+
+        changeCurrency(data.baseCurrencyCode);
+
+        const newEquity = {};
+        if(data.assets !== null)
+            Object.entries(data.assets)
+                .map(([key, value]) => (newEquity[key] = value));
+        if(data.liabilities !== null)
+            Object.entries(data.liabilities)
+                .map(([key, value]) => (newEquity[key] = value));
+        setEquity(newEquity);
+        setUserId(data.userId);
+        setTotalAssets(data.totalAssets);
+        setTotalLiabilities(data.totalLiabilities);
+        setNetWorth(data.totalNetWorth);
+    });
+
+    const changeCurrency = (targetCurrency) => {
+        if (targetCurrency == null)
+            targetCurrency=currency;
+        setCurrency(targetCurrency);
+    }
+
     const onCurrencyChange = (event) => {
         const newCurrency = event.target.value;
-        const oldCurrency = currencyFormat.currency;
-
-        const newCurrencyFormat = {
-            currency:newCurrency,
-            thousand:event.target.selectedOptions[0].getAttribute('thousand'),
-            decimal:event.target.selectedOptions[0].getAttribute('decimal'),
-            symbol:event.target.selectedOptions[0].getAttribute('symbol'),
-        }
-        setCurrencyFormat(newCurrencyFormat);
+        const oldCurrency = currency;
+        changeCurrency(newCurrency);
         calculateEquity(equity, oldCurrency, newCurrency);
     }
 
@@ -55,15 +94,17 @@ const Content = () => {
         if (sourceInfo.source !== "event")
             return;
 
-        console.log(sourceInfo)
         const id = sourceInfo.event.target.id;
-        const value = values.value;
+        let value = values.value;
+        if (!value)
+            value = 0;
+
         const newEquity = {
             ...equity,
             [id]: value
         }
         setEquity(newEquity);
-        calculateEquity(newEquity, currencyFormat.currency);
+        calculateEquity(newEquity, currency);
     }
 
     const calculateEquity = (equity, baseCurrencyCode, targetCurrencyCode) => {
@@ -83,6 +124,7 @@ const Content = () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                userId,
                 baseCurrencyCode,
                 targetCurrencyCode,
                 assets,
@@ -93,16 +135,7 @@ const Content = () => {
 
         fetch('http://localhost:8080/api/v1/calculateNetWorth', requestOptions)
             .then(response => response.json())
-            .then(data => {
-                console.log("Result: " + JSON.stringify(data));
-                Object.entries(data.assets)
-                    .map(([key, value]) => (equity[key] = value));
-                Object.entries(data.liabilities)
-                    .map(([key, value]) => (equity[key] = value));
-                setTotalAssets(data.totalAssets);
-                setTotalLiabilities(data.totalLiabilities);
-                setNetWorth(data.totalNetWorth);
-            })
+            .then(data => { updateData(data) })
         .catch(console.log);
     }
 
@@ -110,17 +143,17 @@ const Content = () => {
         <div className="Content">
             <div className="right">
                 <label htmlFor="currency">Select Currency: </label>
-                <select name="currency" id="currency" defaultValue={currencyFormat.currency} onChange={onCurrencyChange}>
-                    <option value="AUD" symbol="$" thousand=',' decimal='.'>AUD</option>
-                    <option value="CAD" symbol="$" thousand=',' decimal='.'>CAD</option>
-                    <option value="CHF" symbol="fr." thousand='.' decimal=','>CHF</option>
-                    <option value="CNY" symbol="¥" thousand=',' decimal='.'>CNY</option>
-                    <option value="EUR" symbol="€" thousand='.' decimal=','>EUR</option>
-                    <option value="GBP" symbol="£" thousand=',' decimal='.'>GBP</option>
-                    <option value="HKD" symbol="HK$" thousand=',' decimal='.'>HKD</option>
-                    <option value="JPY" symbol="¥" thousand=',' decimal='.'>JPY</option>
-                    <option value="NZD" symbol="$" thousand=',' decimal='.'>NZD</option>
-                    <option value="USD" symbol="$" thousand=',' decimal='.'>USD</option>
+                <select name="currency" id="currency" value={currency} onChange={onCurrencyChange}>
+                    <option value="AUD">AUD</option>
+                    <option value="CAD">CAD</option>
+                    <option value="CHF">CHF</option>
+                    <option value="CNY">CNY</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="HKD">HKD</option>
+                    <option value="JPY">JPY</option>
+                    <option value="NZD">NZD</option>
+                    <option value="USD">USD</option>
                 </select><br/>
             </div>
 
@@ -129,9 +162,9 @@ const Content = () => {
                 displayType="text"
                 decimalScale={2}
                 fixedDecimalScale={true}
-                thousandSeparator={currencyFormat.thousand}
-                decimalSeparator={currencyFormat.decimal}
-                prefix={currencyFormat.symbol}
+                thousandSeparator={currencyConfig[currency].thousand}
+                decimalSeparator={currencyConfig[currency].decimal}
+                prefix={currencyConfig[currency].symbol}
                 renderText={(value, props) => <p>Net Worth: {value}</p>}
             />
 
@@ -139,12 +172,12 @@ const Content = () => {
 
             <table>
                 <tbody><tr><th scope="row">Assets</th></tr></tbody>
-                <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" format={currencyFormat} state={equity} onChange={onInputChange}/>
-                <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" format={currencyFormat} state={equity} onChange={onInputChange}/>
+                <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" format={currencyConfig[currency]} state={equity} onChange={onInputChange}/>
+                <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" format={currencyConfig[currency]} state={equity} onChange={onInputChange}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Assets</th>
-                        <td className="mid">{currencyFormat.symbol}</td>
+                        <td className="mid">{currencyConfig[currency].symbol}</td>
                         <td>
                             <NumberFormat
                                 className="right"
@@ -152,8 +185,8 @@ const Content = () => {
                                 displayType="input"
                                 decimalScale={2}
                                 fixedDecimalScale={true}
-                                thousandSeparator={currencyFormat.thousand}
-                                decimalSeparator={currencyFormat.decimal}
+                                thousandSeparator={currencyConfig[currency].thousand}
+                                decimalSeparator={currencyConfig[currency].decimal}
                                 readOnly="readOnly"
                             />
                         </td>
@@ -162,12 +195,12 @@ const Content = () => {
                 </tbody>
 
                 <tbody><tr><th scope="row">Liabilities</th></tr></tbody>
-                <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" format={currencyFormat} state={equity} onChange={onInputChange}/>
-                <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" format={currencyFormat} state={equity} onChange={onInputChange}/>
+                <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" format={currencyConfig[currency]} state={equity} onChange={onInputChange}/>
+                <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" format={currencyConfig[currency]} state={equity} onChange={onInputChange}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Liabilities</th>
-                        <td className="mid">{currencyFormat.symbol}</td>
+                        <td className="mid">{currencyConfig[currency].symbol}</td>
                         <td>
                             <NumberFormat
                                 className="right"
@@ -175,8 +208,8 @@ const Content = () => {
                                 displayType="input"
                                 decimalScale={2}
                                 fixedDecimalScale={true}
-                                thousandSeparator={currencyFormat.thousand}
-                                decimalSeparator={currencyFormat.decimal}
+                                thousandSeparator={currencyConfig[currency].thousand}
+                                decimalSeparator={currencyConfig[currency].decimal}
                                 readOnly="readOnly"
                             />
                         </td>

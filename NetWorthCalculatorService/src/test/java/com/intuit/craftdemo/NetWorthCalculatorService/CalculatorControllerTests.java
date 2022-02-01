@@ -33,4 +33,13 @@ public class CalculatorControllerTests extends UnitTestBase {
 		Mockito.verify(mockService, Mockito.times(1)).calculateNetWorth(request);
 		Mockito.verifyNoMoreInteractions(mockService);
 	}
+	
+	@Test
+	void Test_FindUser() {
+		// Call the findUser API and expect a call to NetWorthCalculatorService
+		calculatorController.findUser(600L);
+
+		Mockito.verify(mockService, Mockito.times(1)).getOrCreateUser(600L);
+		Mockito.verifyNoMoreInteractions(mockService);
+	}
 }
