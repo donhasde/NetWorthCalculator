@@ -2,8 +2,11 @@ import TableGroup from './TableGroup'
 import { useState, useEffect } from 'react'
 
 const Content = () => {
-    const [baseCurrency, setBaseCurrency] = useState("AUD");
+    const [equity, setEquity] = useState({});
+    const [baseCurrency, setBaseCurrency] = useState("CAD");
     const [currencySymbol, setCurrencySymbol] = useState('$');
+    const [totalAssets, setTotalAssets] = useState(0.00);
+    const [totalLiabilities, setTotalLiabilities] = useState(0.00);
     const [netWorth, setNetWorth] = useState(0.00);
 
     const assetList = [
@@ -29,24 +32,37 @@ const Content = () => {
         {label: 'Investment Loan', id: 'investmentLoan'},
     ];
 
-    const handleCurrencyChange = (event) => {
+    const onCurrencyChange = (event) => {
         console.log("handleCurrencyChange detected");
-        console.log(event.target.value);
-        console.log(event.target.symbol);
+        const newCurrency = event.target.value;
         setCurrencySymbol(event.target.selectedOptions[0].getAttribute('symbol'));
-        callService(baseCurrency, event.target.value);
+        setBaseCurrency(newCurrency);
+        calculateEquity(equity, baseCurrency, newCurrency);
     }
 
-    const handleChange = () => {
-        callService(baseCurrency, null);
+    const onInputChange = (event) => {
+        console.log("handleInputChange detected");
+        const id = event.target.id;
+        const value = event.target.value;
+        const newEquity = {
+            ...equity,
+            [id]: value
+        }
+        setEquity(newEquity);
+        calculateEquity(newEquity);
     }
 
-    const callService = (baseCurrencyCode, targetCurrencyCode) => {
+    const calculateEquity = (equity, baseCurrencyCode, targetCurrencyCode) => {
         const assetMap = new Map();
-        assetList.map((element) => (assetMap.set(element.id, document.getElementById(element.id).value)));
+        assetList
+            .filter(entry => entry.id in equity)
+            .map(entry => assetMap.set(entry.id, equity[entry.id]));
         const assets = Object.fromEntries(assetMap);
+
         const liabilitiesMap = new Map();
-        liabilitiesList.map((element) => (liabilitiesMap.set(element.id, document.getElementById(element.id).value)));
+        liabilitiesList
+            .filter(entry => entry.id in equity)
+            .map(entry => liabilitiesMap.set(entry.id, equity[entry.id]));
         const liabilities = Object.fromEntries(liabilitiesMap);
 
         const requestOptions = {
@@ -59,18 +75,18 @@ const Content = () => {
                 liabilities
             })
         };
-        console.log(requestOptions.body);
+        console.log("Fetching with request: " + requestOptions.body);
 
         fetch('http://localhost:8080/api/v1/calculateNetWorth', requestOptions)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                console.log("Result: " + JSON.stringify(data));
                 Object.entries(data.assets)
-                    .map(([key, value]) => (document.getElementById(key).value = value));
+                    .map(([key, value]) => (equity[key] = value));
                 Object.entries(data.liabilities)
-                    .map(([key, value]) => (document.getElementById(key).value = value));
-                document.getElementById("totalAssets").value = data.totalAssets;
-                document.getElementById("totalLiabilities").value = data.totalLiabilities;
+                    .map(([key, value]) => (equity[key] = value));
+                setTotalAssets(data.totalAssets);
+                setTotalLiabilities(data.totalLiabilities);
                 setBaseCurrency(data.baseCurrencyCode);
                 setNetWorth(data.totalNetWorth);
             })
@@ -80,7 +96,7 @@ const Content = () => {
     return (
         <div className="Content">
             <label htmlFor="currency">Select Currency: </label>
-            <select name="currency" id="currency" onChange={handleCurrencyChange}>
+            <select name="currency" id="currency" defaultValue={baseCurrency} onChange={onCurrencyChange}>
                 <option value="AUD" symbol="$">AUD</option>
                 <option value="CAD" symbol="$">CAD</option>
                 <option value="CHF" symbol="₣">CHF</option>
@@ -95,25 +111,25 @@ const Content = () => {
             <p>Net Worth: {currencySymbol} {netWorth}</p>
             <hr className="solidLine"></hr>
 
-            <table onChange={handleChange}>
+            <table>
                 <tbody><tr><th scope="row">Assets</th></tr></tbody>
-                <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" symbol={currencySymbol}/>
-                <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" symbol={currencySymbol}/>
+                <TableGroup data={assetList.slice(0, 9)} label="Cash and Investments" symbol={currencySymbol} state={equity} onChange={onInputChange}/>
+                <TableGroup data={assetList.slice(9, assetList.length)} label="Long Term Assets" symbol={currencySymbol} state={equity} onChange={onInputChange}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Assets</th>
-                        <td>{currencySymbol}<input type="number" readOnly="readOnly" id="totalAssets" defaultValue="0.00"/></td>
+                        <td>{currencySymbol}<input type="number" readOnly="readOnly" id="totalAssets" value={totalAssets}/></td>
                     </tr>
                     <tr className="break"><td/></tr>
                 </tbody>
 
                 <tbody><tr><th scope="row">Liabilities</th></tr></tbody>
-                <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" symbol={currencySymbol}/>
-                <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" symbol={currencySymbol}/>
+                <TableGroup data={liabilitiesList.slice(0,2)} label="Short Term Liabilities" symbol={currencySymbol} state={equity} onChange={onInputChange}/>
+                <TableGroup data={liabilitiesList.slice(2,liabilitiesList.length)} label="Long Term Debt" symbol={currencySymbol} state={equity} onChange={onInputChange}/>
                 <tbody>
                     <tr>
                         <th scope="row">Total Liabilities</th>
-                        <td>{currencySymbol}<input type="number" readOnly="readOnly" id="totalLiabilities" defaultValue="0.00"/></td>
+                        <td>{currencySymbol}<input type="number" readOnly="readOnly" id="totalLiabilities" value={totalLiabilities}/></td>
                     </tr>
                 </tbody>
             </table>
